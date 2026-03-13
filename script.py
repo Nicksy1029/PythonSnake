@@ -20,7 +20,16 @@ canvas = tk.Canvas(
 )
 canvas.pack()
 
-snake = [(100, 100), (90, 100), (80, 100)]
+def create_snake():
+    max_x = (WIDTH // CELL_SIZE) - 3
+    max_y = (HEIGHT // CELL_SIZE) - 1
+
+    x = random.randrange(0, max_x) * CELL_SIZE
+    y = random.randrange(0, max_y) * CELL_SIZE
+
+    return [(x, y), (x-CELL_SIZE, y), (x-2*CELL_SIZE, y)]
+
+snake = create_snake()
 direction = 'Right'
 score = 0
 game_over = False
@@ -57,8 +66,23 @@ def on_key_press(event):
         if (key == 'Up' and direction != 'Down' or key == 'Down' and direction != 'Up' or
         key == 'Left' and direction != 'Right' or key == 'Right' and direction != 'Left'):
             direction = key
+    elif key == 'space' and game_over:
+        restart_game()
 
 root.bind("<KeyPress>", on_key_press)
+
+def restart_game():
+    global snake, direction, score, food, game_over
+    snake = create_snake()
+    direction = 'Right'
+    food = create_food()
+    score = 0
+    game_over = False
+    canvas.delete('all')
+    draw_food()
+    draw_snake()
+    update_title()
+    root.after(DELAY, game_loop)
 
 def move_snake():
     head_x, head_y = snake[0]
@@ -104,6 +128,9 @@ def end_game():
         font=('Arial', 24)
     )
 
+def check_self_collision():
+    return snake[0] in snake[1:]
+
 def game_loop():
     global snake, food, score
 
@@ -112,7 +139,7 @@ def game_loop():
 
     move_snake()
 
-    if check_wall_collision():
+    if check_wall_collision() or check_self_collision():
         end_game()
         return
 
